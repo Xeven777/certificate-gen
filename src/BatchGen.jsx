@@ -3,8 +3,8 @@ import { saveAs } from "file-saver";
 import fontkit from "@pdf-lib/fontkit";
 import { useState } from "react";
 
-const Gen = () => {
-  const [userName, setUserName] = useState("");
+export const BatchGen = () => {
+  const [userNames, setUserNames] = useState("");
   const fontUrl = "/DancingScript-Variable.ttf";
 
   const capitalize = (str, lower = false) =>
@@ -45,7 +45,7 @@ const Gen = () => {
 
     var file = new File(
       [pdfBytes],
-      `Certificate-${(Math.random() * 1000000).toFixed(0)}.pdf`,
+      `${name}-Certificate-${(Math.random() * 1000000).toPrecision(6)}.pdf`,
       {
         type: "application/pdf;charset=utf-8",
       }
@@ -54,12 +54,16 @@ const Gen = () => {
   };
 
   const handleSubmit = () => {
-    const val = capitalize(userName);
+    const names = userNames
+      .split(",")
+      .map((name) => capitalize(name.replace(/"/g, "").trim()));
 
-    if (val.trim() !== "") {
-      generatePDF(val);
+    if (names.length > 0 && names[0] !== "") {
+      names.forEach((name) => {
+        generatePDF(name);
+      });
     } else {
-      alert("Enter your name correctly");
+      alert("Enter at least one name correctly");
     }
   };
 
@@ -68,16 +72,14 @@ const Gen = () => {
       <h1>Certificate Generator</h1>
       <input
         type="text"
-        id="name"
-        placeholder="Enter your name"
-        value={userName}
-        onChange={(e) => setUserName(e.target.value)}
+        id="names"
+        placeholder="Enter names separated by commas"
+        value={userNames}
+        onChange={(e) => setUserNames(e.target.value)}
       />
       <button id="submitBtn" onClick={handleSubmit}>
-        Generate PDF
+        Generate PDFs
       </button>
     </div>
   );
 };
-
-export default Gen;

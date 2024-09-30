@@ -9,7 +9,7 @@ export const BatchGen = () => {
 
   const capitalize = (str, lower = false) =>
     (lower ? str.toLowerCase() : str).replace(/(?:^|\s|["'([{])+\S/g, (match) =>
-      match.toUpperCase()
+      match.toUpperCase(),
     );
 
   const generatePDF = async (name) => {
@@ -18,7 +18,7 @@ export const BatchGen = () => {
       return alert("Name too long. Retry with a shorter name");
     const fontBytes = await fetch(fontUrl).then((res) => res.arrayBuffer());
     const existingPdfBytes = await fetch("./certificate1.pdf").then((res) =>
-      res.arrayBuffer()
+      res.arrayBuffer(),
     );
     const fontSize = nameLength > 20 ? 48 : 60;
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
@@ -48,7 +48,7 @@ export const BatchGen = () => {
       `${name}-Certificate-${(Math.random() * 1000000).toPrecision(6)}.pdf`,
       {
         type: "application/pdf;charset=utf-8",
-      }
+      },
     );
     saveAs(file);
   };

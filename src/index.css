@@ -1,7 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap");
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light dark;
@@ -23,7 +22,7 @@ a:hover {
 }
 
 body {
-  font-family: "Poppins", sans-serif;
+  font-family: "Poppins", Arial, Helvetica, sans-serif;
   margin: 0;
   display: flex;
   place-items: center;
@@ -108,6 +107,7 @@ h1 {
 input {
   font-size: 17px;
   width: clamp(200px, 20%, 300px);
-  padding: 4px 6px;
+  padding: 8px 14px;
+  border-radius: 6px;
   border: solid 1px #a39c76;
 }

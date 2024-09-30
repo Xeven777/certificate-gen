@@ -43,9 +43,13 @@ const Gen = () => {
     const pdfBytes = await pdfDoc.save();
     console.log("Done creating");
 
-    var file = new File([pdfBytes], "Certificate.pdf", {
-      type: "application/pdf;charset=utf-8",
-    });
+    var file = new File(
+      [pdfBytes],
+      `Certificate-${(Math.random() * 1000000).toFixed(0)}.pdf`,
+      {
+        type: "application/pdf;charset=utf-8",
+      }
+    );
     saveAs(file);
   };
 

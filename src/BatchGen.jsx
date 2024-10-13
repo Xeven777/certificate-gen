@@ -97,43 +97,71 @@ export const BatchGen = () => {
     <div className="Gen">
       <h1>Certificate Generator</h1>
 
-      <textarea
-        placeholder="Enter names separated by commas"
-        value={userNames}
-        onChange={(e) => setUserNames(e.target.value)}
-      />
+      <label htmlFor="names">
+        Names:
+        <textarea
+          id="names"
+          placeholder="Enter names separated by commas"
+          value={userNames}
+          onChange={(e) => setUserNames(e.target.value)}
+        />
+      </label>
 
-      <input
-        type="color"
-        value={textColor}
-        onChange={(e) => setTextColor(e.target.value)}
-      />
+      <label htmlFor="color">
+        Text Color:
+        <input
+          type="color"
+          id="color"
+          value={textColor}
+          onChange={(e) => setTextColor(e.target.value)}
+        />
+      </label>
 
-      <input
-        type="number"
-        placeholder="Font Size"
-        value={fontSize}
-        onChange={(e) => setFontSize(parseInt(e.target.value))}
-      />
+      <label htmlFor="fontsize">
+        Font Size:
+        <input
+          id="fontsize"
+          min="10"
+          max="100"
+          type="number"
+          placeholder="Font Size"
+          value={fontSize}
+          onChange={(e) => setFontSize(parseInt(e.target.value))}
+        />
+      </label>
 
-      <input
-        type="number"
-        placeholder="X Offset"
-        value={xOffset}
-        onChange={(e) => setXOffset(parseInt(e.target.value))}
-      />
+      <label htmlFor="xOffset">
+        X Offset:
+        <input
+          id="xOffset"
+          type="number"
+          placeholder="X Offset"
+          value={xOffset}
+          onChange={(e) => setXOffset(parseInt(e.target.value))}
+        />
+      </label>
 
-      <input
-        type="number"
-        placeholder="Y Offset"
-        value={yOffset}
-        onChange={(e) => setYOffset(parseInt(e.target.value))}
-      />
+      <label htmlFor="yOffset">
+        Y Offset:
+        <input
+          id="yOffset"
+          type="number"
+          placeholder="Y Offset"
+          value={yOffset}
+          onChange={(e) => setYOffset(parseInt(e.target.value))}
+        />
+      </label>
 
-      <div className="file-upload">
-        <input type="file" accept=".pdf" onChange={handleTemplateUpload} />
+      <label htmlFor="templateUpload" className="file-upload">
+        Upload Template:
+        <input
+          id="templateUpload"
+          type="file"
+          accept=".pdf"
+          onChange={handleTemplateUpload}
+        />
         {templateFile && <span>{templateFile.name}</span>}
-      </div>
+      </label>
 
       <button onClick={handleSubmit}>Generate PDFs</button>
 

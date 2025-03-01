@@ -6,7 +6,7 @@ function App() {
       <BatchGen />
       <footer>
         Made by{" "}
-        <a href="https://bento.me/anish7" target="__blank">
+        <a href="https://bento.anish7.me" target="__blank">
           Anish
         </a>
       </footer>

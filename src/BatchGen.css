@@ -152,13 +152,6 @@ input[type="file"] {
   display: none;
 }
 
-/* Color picker styling */
-.color-picker {
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .color-input-container {
   display: flex;
   align-items: center;
@@ -167,9 +160,10 @@ input[type="file"] {
 
 .color-picker input[type="color"] {
   -webkit-appearance: none;
+  margin: 0 10px;
   border: none;
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
@@ -313,4 +307,17 @@ input[type="file"] {
     width: 100%;
     justify-content: space-between;
   }
+}
+
+::selection {
+  background: var(--primary-color);
+  color: #1d0d03;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 10px;
 }

@@ -162,21 +162,6 @@ export const BatchGen = () => {
             </div>
 
             <div className="form-row two-columns">
-              <label htmlFor="color" className="input-group color-picker">
-                <div className="input-label">
-                  <Palette size={18} />
-                  <span className="label-text">Text Color</span>
-                </div>
-                <div className="color-input-container">
-                  <input
-                    type="color"
-                    id="color"
-                    value={textColor}
-                    onChange={(e) => setTextColor(e.target.value)}
-                  />
-                  <span className="color-value">{textColor}</span>
-                </div>
-              </label>
               <label htmlFor="fontsize" className="input-group">
                 <div className="input-label">
                   <Type size={18} />
@@ -191,6 +176,22 @@ export const BatchGen = () => {
                   value={fontSize}
                   onChange={(e) => setFontSize(parseInt(e.target.value))}
                 />
+              </label>
+              
+              <label htmlFor="color" className="input-group color-picker">
+                <div className="input-label">
+                  <Palette size={18} />
+                  <span className="label-text">Text Color</span>
+                </div>
+                <div className="color-input-container">
+                  <input
+                    type="color"
+                    id="color"
+                    value={textColor}
+                    onChange={(e) => setTextColor(e.target.value)}
+                  />
+                  <span className="color-value">{textColor}</span>
+                </div>
               </label>
             </div>
 

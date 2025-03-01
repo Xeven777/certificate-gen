@@ -18,6 +18,7 @@ import {
   X,
   Archive,
   FileSpreadsheet,
+  Check,
 } from "lucide-react";
 import "./BatchGen.css";
 
@@ -39,13 +40,28 @@ export const BatchGen = () => {
   );
   const [downloadOption, setDownloadOption] = useState("individual");
   const [csvUploaded, setCsvUploaded] = useState(false);
+  const [showCsvSelector, setShowCsvSelector] = useState(false);
+  const [csvData, setCsvData] = useState({
+    headers: [],
+    rows: [],
+    selectedColumn: -1,
+    delimiter: ",",
+    fileName: "",
+  });
 
   const fonts = [
     { name: "Dancing Script", value: "DancingScript-Variable.ttf" },
-    { name: "Open Sans", value: "OpenSans-Variable.ttf" },
-    { name: "Playfair Display", value: "PlayfairDisplay-Regular.ttf" },
-    { name: "Montserrat", value: "Montserrat-Regular.ttf" },
-    { name: "Roboto", value: "Roboto-Regular.ttf" },
+    { name: "Open Sans", value: "OpenSans-Regular.ttf" },
+    { name: "Playfair Display", value: "PlayfairDisplay-Medium.ttf" },
+    { name: "Montserrat", value: "Montserrat-Medium.ttf" },
+    {
+      name: "Libre Caslon Text",
+      value: "LibreCaslonText-Regular.ttf",
+    },
+    {
+      name: "Crimson Pro",
+      value: "CrimsonPro-Medium.ttf",
+    },
   ];
 
   useEffect(() => {
@@ -65,38 +81,95 @@ export const BatchGen = () => {
     return `/${selectedFont}`;
   };
 
-  const parseCSV = (csvText) => {
+  const detectDelimiter = (csvText) => {
+    const firstLine = csvText.split(/\r?\n/)[0];
+    const delimiters = [",", ";", "\t", "|"];
+    let bestDelimiter = ",";
+    let maxCount = 0;
+
+    for (const delimiter of delimiters) {
+      const count = (firstLine.match(new RegExp(delimiter, "g")) || []).length;
+      if (count > maxCount) {
+        maxCount = count;
+        bestDelimiter = delimiter;
+      }
+    }
+
+    return bestDelimiter;
+  };
+
+  const parseCSV = (csvText, delimiter = ",") => {
     try {
+      // Handle quoted fields with embedded delimiters or newlines
+      const rows = [];
+      const headers = [];
+
       const lines = csvText.split(/\r?\n/);
-      const nameIndex = findNameColumnIndex(lines[0]);
+      if (lines.length === 0) throw new Error("Empty CSV file");
 
-      if (nameIndex === -1) {
-        throw new Error(
-          "No name column found in CSV. Please ensure your CSV has a column with 'name' or 'participant' in the header."
-        );
+      // Parse header row
+      const headerRow = parseCSVLine(lines[0], delimiter);
+      headerRow.forEach((header, index) => {
+        headers.push({
+          id: index,
+          name: header.trim() || `Column ${index + 1}`,
+        });
+      });
+
+      // Parse data rows
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue; // Skip empty lines
+
+        const row = parseCSVLine(lines[i], delimiter);
+        if (row.length > 0) {
+          rows.push(row);
+        }
       }
 
-      const names = lines
-        .slice(1)
-        .map((line) => {
-          const columns = line.split(",");
-          return columns[nameIndex] ? columns[nameIndex].trim() : "";
-        })
-        .filter((name) => name.length > 0);
-
-      if (names.length === 0) {
-        throw new Error("No valid names found in the CSV file.");
+      if (rows.length === 0) {
+        throw new Error("No data rows found in CSV");
       }
 
-      return names;
+      return { headers, rows };
     } catch (err) {
       throw new Error(`Error parsing CSV: ${err.message}`);
     }
   };
 
-  const findNameColumnIndex = (headerRow) => {
-    // Try to find a column that might contain names
-    const columns = headerRow.split(",").map((col) => col.trim().toLowerCase());
+  // Helper function to parse a single CSV line handling quoted fields
+  const parseCSVLine = (line, delimiter) => {
+    const result = [];
+    let currentField = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+
+      if (char === '"') {
+        // Toggle quote state
+        if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+          // Handle escaped quotes (two double quotes in a row)
+          currentField += '"';
+          i++; // Skip the next quote
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === delimiter && !inQuotes) {
+        // End of field
+        result.push(currentField);
+        currentField = "";
+      } else {
+        currentField += char;
+      }
+    }
+
+    // Don't forget the last field
+    result.push(currentField);
+
+    return result;
+  };
+
+  const findNameColumnIndex = (headers) => {
     const nameColumnKeywords = [
       "name",
       "participant",
@@ -104,23 +177,28 @@ export const BatchGen = () => {
       "attendee",
       "person",
       "recipient",
+      "full name",
+      "username",
     ];
 
     // First look for exact matches
-    for (const keyword of nameColumnKeywords) {
-      const index = columns.indexOf(keyword);
-      if (index !== -1) return index;
-    }
-
-    // Then look for partial matches
-    for (let i = 0; i < columns.length; i++) {
+    for (let i = 0; i < headers.length; i++) {
+      const headerName = headers[i].name.toLowerCase();
       for (const keyword of nameColumnKeywords) {
-        if (columns[i].includes(keyword)) return i;
+        if (headerName === keyword) return i;
       }
     }
 
-    // If no match found, default to first column
-    return columns.length > 0 ? 0 : -1;
+    // Then look for partial matches
+    for (let i = 0; i < headers.length; i++) {
+      const headerName = headers[i].name.toLowerCase();
+      for (const keyword of nameColumnKeywords) {
+        if (headerName.includes(keyword)) return i;
+      }
+    }
+
+    // Default to first column
+    return headers.length > 0 ? 0 : -1;
   };
 
   const handleCSVUpload = (e) => {
@@ -136,10 +214,19 @@ export const BatchGen = () => {
     reader.onload = (e) => {
       try {
         const csvText = e.target.result;
-        const names = parseCSV(csvText);
-        setUserNames(names.join(", "));
-        setCsvUploaded(true);
-        setSuccess(`Successfully imported ${names.length} names from CSV`);
+        const delimiter = detectDelimiter(csvText);
+        const { headers, rows } = parseCSV(csvText, delimiter);
+        const suggestedColumn = findNameColumnIndex(headers);
+
+        setCsvData({
+          headers,
+          rows,
+          selectedColumn: suggestedColumn,
+          delimiter,
+          fileName: file.name,
+        });
+
+        setShowCsvSelector(true);
       } catch (err) {
         setError(err.message);
       }
@@ -148,6 +235,41 @@ export const BatchGen = () => {
       setError("Failed to read CSV file");
     };
     reader.readAsText(file);
+  };
+
+  const handleSelectColumn = (columnIndex) => {
+    setCsvData((prev) => ({
+      ...prev,
+      selectedColumn: columnIndex,
+    }));
+  };
+
+  const handleApplyColumnSelection = () => {
+    try {
+      if (csvData.selectedColumn === -1) {
+        throw new Error("Please select a column");
+      }
+
+      const names = csvData.rows
+        .map((row) => {
+          // Ensure we have a valid index
+          return row[csvData.selectedColumn]
+            ? row[csvData.selectedColumn].trim()
+            : "";
+        })
+        .filter((name) => name.length > 0);
+
+      if (names.length === 0) {
+        throw new Error("No valid names found in the selected column");
+      }
+
+      setUserNames(names.join(", "));
+      setCsvUploaded(true);
+      setSuccess(`Successfully imported ${names.length} names from CSV`);
+      setShowCsvSelector(false);
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const generatePDF = async (name, saveFile = true) => {
@@ -637,6 +759,90 @@ export const BatchGen = () => {
                 title="Certificate Preview"
                 className="preview-frame"
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CSV Column Selector Modal */}
+      {showCsvSelector && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowCsvSelector(false)}
+        >
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Select Name Column from CSV</h3>
+              <button
+                className="close-button"
+                onClick={() => setShowCsvSelector(false)}
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="csv-info">
+                <p>
+                  <strong>File:</strong> {csvData.fileName}
+                </p>
+                <p>
+                  <strong>Total rows:</strong> {csvData.rows.length}
+                </p>
+              </div>
+
+              <div className="column-selector">
+                <p className="instructions">
+                  Select the column that contains participant names:
+                </p>
+
+                <div className="column-list">
+                  {csvData.headers.map((header, index) => (
+                    <label
+                      key={header.id}
+                      className={`column-option ${
+                        csvData.selectedColumn === index ? "selected" : ""
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="columnSelect"
+                        checked={csvData.selectedColumn === index}
+                        onChange={() => handleSelectColumn(index)}
+                      />
+                      <div className="column-info">
+                        <div className="column-header">{header.name}</div>
+                        <div className="column-preview">
+                          {csvData.rows.slice(0, 3).map((row, i) => (
+                            <span key={i}>
+                              {row[index] || "(empty)"}
+                              {i < 2 && csvData.rows.length > 1 ? ", " : ""}
+                            </span>
+                          ))}
+                          {csvData.rows.length > 3 && "..."}
+                        </div>
+                      </div>
+                      {csvData.selectedColumn === index && (
+                        <Check size={18} className="check-icon" />
+                      )}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="secondary-btn"
+                onClick={() => setShowCsvSelector(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="primary-btn"
+                onClick={handleApplyColumnSelection}
+              >
+                Import Names
+              </button>
             </div>
           </div>
         </div>

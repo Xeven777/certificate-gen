@@ -36,7 +36,7 @@ export const BatchGen = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedFont, setSelectedFont] = useState(
-    "DancingScript-Variable.ttf"
+    "LibreCaslonText-Regular.ttf"
   );
   const [downloadOption, setDownloadOption] = useState("individual");
   const [csvUploaded, setCsvUploaded] = useState(false);
@@ -48,6 +48,7 @@ export const BatchGen = () => {
     delimiter: ",",
     fileName: "",
   });
+  const [skipHeader, setSkipHeader] = useState(true);
 
   const fonts = [
     { name: "Dancing Script", value: "DancingScript-Variable.ttf" },
@@ -57,10 +58,6 @@ export const BatchGen = () => {
     {
       name: "Libre Caslon Text",
       value: "LibreCaslonText-Regular.ttf",
-    },
-    {
-      name: "Crimson Pro",
-      value: "CrimsonPro-Medium.ttf",
     },
   ];
 
@@ -107,17 +104,31 @@ export const BatchGen = () => {
       const lines = csvText.split(/\r?\n/);
       if (lines.length === 0) throw new Error("Empty CSV file");
 
-      // Parse header row
-      const headerRow = parseCSVLine(lines[0], delimiter);
-      headerRow.forEach((header, index) => {
-        headers.push({
-          id: index,
-          name: header.trim() || `Column ${index + 1}`,
+      let headerRow;
+      let dataStart = 0;
+
+      if (!skipHeader) {
+        headerRow = parseCSVLine(lines[0], delimiter);
+        headerRow.forEach((header, index) => {
+          headers.push({
+            id: index,
+            name: header.trim() || `Column ${index + 1}`,
+          });
         });
-      });
+        dataStart = 1;
+      } else {
+        // If skipping header, create default headers
+        const firstDataRow = parseCSVLine(lines[0], delimiter);
+        firstDataRow.forEach((_, index) => {
+          headers.push({
+            id: index,
+            name: `Column ${index + 1}`,
+          });
+        });
+      }
 
       // Parse data rows
-      for (let i = 1; i < lines.length; i++) {
+      for (let i = dataStart; i < lines.length; i++) {
         if (!lines[i].trim()) continue; // Skip empty lines
 
         const row = parseCSVLine(lines[i], delimiter);
@@ -791,6 +802,16 @@ export const BatchGen = () => {
               </div>
 
               <div className="column-selector">
+                <div className="header-options">
+                  <label className="skip-header-option">
+                    <input
+                      type="checkbox"
+                      checked={skipHeader}
+                      onChange={(e) => setSkipHeader(e.target.checked)}
+                    />
+                    Skip Header Row
+                  </label>
+                </div>
                 <p className="instructions">
                   Select the column that contains participant names:
                 </p>

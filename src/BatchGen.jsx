@@ -2,6 +2,18 @@ import { useState } from "react";
 import { PDFDocument, rgb } from "pdf-lib";
 import { saveAs } from "file-saver";
 import fontkit from "@pdf-lib/fontkit";
+import {
+  Upload,
+  Users,
+  Palette,
+  Type,
+  MoveHorizontal,
+  MoveVertical,
+  FileText,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
+import "./BatchGen.css";
 
 export const BatchGen = () => {
   const [userNames, setUserNames] = useState("");
@@ -12,6 +24,7 @@ export const BatchGen = () => {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [templateFile, setTemplateFile] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const fontUrl = "/DancingScript-Variable.ttf";
 
@@ -75,9 +88,17 @@ export const BatchGen = () => {
     if (names.length > 0 && names[0] !== "") {
       setProgress(0);
       setError("");
-      for (let i = 0; i < names.length; i++) {
-        await generatePDF(names[i]);
-        setProgress(((i + 1) / names.length) * 100);
+      setIsGenerating(true);
+
+      try {
+        for (let i = 0; i < names.length; i++) {
+          await generatePDF(names[i]);
+          setProgress(((i + 1) / names.length) * 100);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsGenerating(false);
       }
     } else {
       setError("Enter at least one name correctly");
@@ -94,84 +115,146 @@ export const BatchGen = () => {
   };
 
   return (
-    <div className="Gen">
-      <h1>Certificate Generator</h1>
+    <div className="certificate-generator">
+      <div className="header">
+        <h1>Certificate Generator</h1>
+        <p className="subtitle">Create personalized certificates in seconds</p>
+      </div>
 
-      <label htmlFor="names">
-        Names:
-        <textarea
-          id="names"
-          placeholder="Enter names separated by commas"
-          value={userNames}
-          onChange={(e) => setUserNames(e.target.value)}
-        />
-      </label>
+      <div className="generator-container">
+        <div className="form-section">
+          <div className="form-group">
+            <label htmlFor="templateUpload" className="file-upload">
+              <div className="upload-box">
+                <Upload size={32} className="upload-icon" />
+                <span className="upload-text">
+                  {templateFile ? templateFile.name : "Upload Template PDF"}
+                </span>
+              </div>
+              <input
+                id="templateUpload"
+                type="file"
+                accept=".pdf"
+                onChange={handleTemplateUpload}
+              />
+            </label>
+          </div>
 
-      <label htmlFor="color">
-        Text Color:
-        <input
-          type="color"
-          id="color"
-          value={textColor}
-          onChange={(e) => setTextColor(e.target.value)}
-        />
-      </label>
+          <div className="form-group">
+            <label htmlFor="names" className="input-group">
+              <div className="input-label">
+                <Users size={18} />
+                <span className="label-text">Names</span>
+              </div>
+              <textarea
+                id="names"
+                placeholder="Enter names separated by commas"
+                value={userNames}
+                onChange={(e) => setUserNames(e.target.value)}
+              />
+            </label>
+          </div>
 
-      <label htmlFor="fontsize">
-        Font Size:
-        <input
-          id="fontsize"
-          min="10"
-          max="100"
-          type="number"
-          placeholder="Font Size"
-          value={fontSize}
-          onChange={(e) => setFontSize(parseInt(e.target.value))}
-        />
-      </label>
+          <div className="form-group text-settings">
+            <div className="section-header">
+              <FileText size={20} />
+              <h3>Text Settings</h3>
+            </div>
 
-      <label htmlFor="xOffset">
-        X Offset:
-        <input
-          id="xOffset"
-          type="number"
-          placeholder="X Offset"
-          value={xOffset}
-          onChange={(e) => setXOffset(parseInt(e.target.value))}
-        />
-      </label>
+            <div className="form-row two-columns">
+              <label htmlFor="color" className="input-group color-picker">
+                <div className="input-label">
+                  <Palette size={18} />
+                  <span className="label-text">Text Color</span>
+                </div>
+                <div className="color-input-container">
+                  <input
+                    type="color"
+                    id="color"
+                    value={textColor}
+                    onChange={(e) => setTextColor(e.target.value)}
+                  />
+                  <span className="color-value">{textColor}</span>
+                </div>
+              </label>
+              <label htmlFor="fontsize" className="input-group">
+                <div className="input-label">
+                  <Type size={18} />
+                  <span className="label-text">Font Size</span>
+                </div>
+                <input
+                  id="fontsize"
+                  min="10"
+                  max="100"
+                  type="number"
+                  placeholder="Font Size"
+                  value={fontSize}
+                  onChange={(e) => setFontSize(parseInt(e.target.value))}
+                />
+              </label>
+            </div>
 
-      <label htmlFor="yOffset">
-        Y Offset:
-        <input
-          id="yOffset"
-          type="number"
-          placeholder="Y Offset"
-          value={yOffset}
-          onChange={(e) => setYOffset(parseInt(e.target.value))}
-        />
-      </label>
+            <div className="form-row two-columns">
+              <label htmlFor="xOffset" className="input-group">
+                <div className="input-label">
+                  <MoveHorizontal size={18} />
+                  <span className="label-text">X Offset</span>
+                </div>
+                <input
+                  id="xOffset"
+                  type="number"
+                  placeholder="X Offset"
+                  value={xOffset}
+                  onChange={(e) => setXOffset(parseInt(e.target.value))}
+                />
+              </label>
 
-      <label htmlFor="templateUpload" className="file-upload">
-        Upload Template:
-        <input
-          id="templateUpload"
-          type="file"
-          accept=".pdf"
-          onChange={handleTemplateUpload}
-        />
-        {templateFile && <span>{templateFile.name}</span>}
-      </label>
+              <label htmlFor="yOffset" className="input-group">
+                <div className="input-label">
+                  <MoveVertical size={18} />
+                  <span className="label-text">Y Offset</span>
+                </div>
+                <input
+                  id="yOffset"
+                  type="number"
+                  placeholder="Y Offset"
+                  value={yOffset}
+                  onChange={(e) => setYOffset(parseInt(e.target.value))}
+                />
+              </label>
+            </div>
+          </div>
 
-      <button onClick={handleSubmit}>Generate PDFs</button>
+          <div className="action-section">
+            <button
+              className="generate-btn"
+              onClick={handleSubmit}
+              disabled={isGenerating}
+            >
+              {isGenerating ? "Generating..." : "Generate Certificates"}
+            </button>
+          </div>
+        </div>
+      </div>
 
       {progress > 0 && (
-        <div className="progress-bar">
-          <div className="progress" style={{ width: `${progress}%` }} />
+        <div className="progress-container">
+          <div className="progress-bar">
+            <div className="progress" style={{ width: `${progress}%` }} />
+          </div>
+          <div className="progress-text">
+            <CheckCircle2 size={16} className="progress-icon" />
+            {Math.round(progress)}% Complete
+          </div>
         </div>
       )}
 
-      {error && <div className="error-message">{error}</div>}
+      {error && (
+        <div className="error-message">
+          <AlertCircle size={20} />
+          {error}
+        </div>
+      )}
     </div>
   );
 };

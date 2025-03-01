@@ -17,6 +17,7 @@ import {
   Eye,
   X,
   Archive,
+  FileSpreadsheet,
 } from "lucide-react";
 import "./BatchGen.css";
 
@@ -37,6 +38,7 @@ export const BatchGen = () => {
     "DancingScript-Variable.ttf"
   );
   const [downloadOption, setDownloadOption] = useState("individual");
+  const [csvUploaded, setCsvUploaded] = useState(false);
 
   const fonts = [
     { name: "Dancing Script", value: "DancingScript-Variable.ttf" },
@@ -61,6 +63,91 @@ export const BatchGen = () => {
 
   const getFontUrl = () => {
     return `/${selectedFont}`;
+  };
+
+  const parseCSV = (csvText) => {
+    try {
+      const lines = csvText.split(/\r?\n/);
+      const nameIndex = findNameColumnIndex(lines[0]);
+
+      if (nameIndex === -1) {
+        throw new Error(
+          "No name column found in CSV. Please ensure your CSV has a column with 'name' or 'participant' in the header."
+        );
+      }
+
+      const names = lines
+        .slice(1)
+        .map((line) => {
+          const columns = line.split(",");
+          return columns[nameIndex] ? columns[nameIndex].trim() : "";
+        })
+        .filter((name) => name.length > 0);
+
+      if (names.length === 0) {
+        throw new Error("No valid names found in the CSV file.");
+      }
+
+      return names;
+    } catch (err) {
+      throw new Error(`Error parsing CSV: ${err.message}`);
+    }
+  };
+
+  const findNameColumnIndex = (headerRow) => {
+    // Try to find a column that might contain names
+    const columns = headerRow.split(",").map((col) => col.trim().toLowerCase());
+    const nameColumnKeywords = [
+      "name",
+      "participant",
+      "student",
+      "attendee",
+      "person",
+      "recipient",
+    ];
+
+    // First look for exact matches
+    for (const keyword of nameColumnKeywords) {
+      const index = columns.indexOf(keyword);
+      if (index !== -1) return index;
+    }
+
+    // Then look for partial matches
+    for (let i = 0; i < columns.length; i++) {
+      for (const keyword of nameColumnKeywords) {
+        if (columns[i].includes(keyword)) return i;
+      }
+    }
+
+    // If no match found, default to first column
+    return columns.length > 0 ? 0 : -1;
+  };
+
+  const handleCSVUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
+      setError("Please upload a valid CSV file");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const csvText = e.target.result;
+        const names = parseCSV(csvText);
+        setUserNames(names.join(", "));
+        setCsvUploaded(true);
+        setSuccess(`Successfully imported ${names.length} names from CSV`);
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+    reader.onerror = () => {
+      setError("Failed to read CSV file");
+    };
+    reader.readAsText(file);
   };
 
   const generatePDF = async (name, saveFile = true) => {
@@ -287,8 +374,27 @@ export const BatchGen = () => {
             </label>
           </div>
 
-          {/* Names Input */}
+          {/* Names Input and CSV Upload */}
           <div className="form-group">
+            <div className="csv-upload-section">
+              <label htmlFor="csvUpload" className="csv-upload-btn">
+                <FileSpreadsheet size={18} />
+                Import Names from CSV
+                <input
+                  id="csvUpload"
+                  type="file"
+                  accept=".csv"
+                  onChange={handleCSVUpload}
+                />
+              </label>
+              {csvUploaded && (
+                <span className="csv-status">
+                  <CheckCircle2 size={16} />
+                  CSV Imported
+                </span>
+              )}
+            </div>
+
             <label htmlFor="names" className="input-group">
               <div className="input-label">
                 <Users size={18} />
@@ -296,7 +402,7 @@ export const BatchGen = () => {
               </div>
               <textarea
                 id="names"
-                placeholder="Enter names separated by commas (e.g., John Doe, Jane Smith)"
+                placeholder="Enter names separated by commas (e.g., John Doe, Jane Smith) or import from CSV"
                 value={userNames}
                 onChange={(e) => setUserNames(e.target.value)}
               />

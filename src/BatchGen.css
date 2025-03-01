@@ -553,3 +553,50 @@ option {
 textarea {
   padding: 1rem;
 }
+
+/* CSV Upload Section */
+.csv-upload-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.csv-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.07);
+  color: var(--text-color);
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.csv-upload-btn:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.csv-upload-btn input {
+  display: none;
+}
+
+.csv-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--success-color);
+  font-size: 0.9rem;
+  background-color: rgba(40, 167, 69, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  font-weight: 500;
+}
+
+.csv-status svg {
+  color: var(--success-color);
+}

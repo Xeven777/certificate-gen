@@ -21,7 +21,9 @@ body {
   justify-content: center;
   align-items: center;
 }
-
+button {
+  font-family: "Poppins", Arial, sans-serif;
+}
 #root {
   width: 100%;
   max-width: 800px;

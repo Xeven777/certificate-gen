@@ -12,6 +12,7 @@
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",
     "file-saver": "^2.0.5",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.477.0",
     "opentype.js": "^1.3.4",
     "pdf-lib": "^1.17.1",
